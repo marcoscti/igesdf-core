@@ -2,7 +2,7 @@
 
 /**
  * Plugin Name: IgesDF Core
- * Plugin URI:  https://igesdf.org.br/
+ * Plugin URI:  https://github.com/marcoscti/igesdf-core.git
  * Description: Core functionality extracted from the child theme (shortcodes, OG tags, custom post types, cache, etc.).
  * Version:     1.0.0
  * Author:      Marcos Cordeiro
@@ -10,18 +10,19 @@
  * License:     GPL2
  * Text Domain: igesdf-core
  *
- * NOTE: originally this code lived in the HelloElementorChild theme's
- * functions.php. It has been moved here so that the features remain active
- * even when the theme changes.
  */
 
 // prevent direct access
 if (! defined('ABSPATH')) {
     exit;
 }
+
+/**
+ * Aplicando uma logo personalizada para a tela de login do WordPress.
+ */
 function custom_login_logo()
 {
-    $logo_url = '/wp-content/uploads/2026/02/logo.png';
+    $logo_url = 'https://igesdf.org.br/wp-content/uploads/2022/02/logo-home-1.png';
 ?>
     <style type="text/css">
         #login h1 a {
@@ -36,8 +37,6 @@ function custom_login_logo()
 add_action('login_enqueue_scripts', 'custom_login_logo');
 // include helper file (shortcodes) from this plugin folder
 require_once plugin_dir_path(__FILE__) . 'custom-shortcodes.php';
-
-/************************ IgesDF ************************/
 
 /* =========================
    OPEN GRAPH DINÂMICO
