@@ -1,0 +1,14 @@
+=== IgesDF Core ===
+Contributors: marcoscti
+Donate link: https://marcoscti.dev
+Tags: modal
+Requires at least: 5.0
+Tested up to: 6.6
+Requires PHP: 7.4
+Stable tag: 1.0.2
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+
+== Description ==
+
+Adiciona uma série de post types no site do instituto
