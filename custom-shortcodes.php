@@ -478,6 +478,138 @@ function proc_seletivo_inscricoes_botao_function()
 }
 add_shortcode('proc_seletivo_inscricoes_botao', 'proc_seletivo_inscricoes_botao_function');
 
+/**
+ * DOCUMENTAÇÃO DOS SHORTCODES INTRANET (SWIPERJS)
+ *
+ * 1) [igesdf_intranet_comunicado_carousel]
+ * 2) [igesdf_intranet_divulgacao_carousel]
+ * 3) [igesdf_intranet_capacitacao_carousel]
+ *
+ * Parâmetros disponíveis (opcional):
+ * - posts_per_page: número de itens a exibir (default 8)
+ * - show_title: true/false (exibe título, default true)
+ * - show_excerpt: true/false (exibe excerpt, default false)
+ *
+ * Exemplo:
+ * [igesdf_intranet_comunicado_carousel posts_per_page="6" show_excerpt="true"]
+ *
+ * Requisitos:
+ * - Os CPTs devem estar registrados: comunicado, divulgacao, capacitacao.
+ * - Swiper (CSS + JS) é carregado via CDN.
+ *
+ * Observação:
+ * Caso as publicações sejam privadas, é preciso estar logado para vê-las em frontend.
+ */
+/**
+ * Enqueue Swiper CSS/JS para carrosséis.
+ */
+function igesdf_intranet_swiper_enqueue()
+{
+    wp_enqueue_style('igesdf-swiper', 'https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css', [], null);
+    wp_enqueue_script('igesdf-swiper', 'https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js', [], null, true);
+}
+add_action('wp_enqueue_scripts', 'igesdf_intranet_swiper_enqueue');
+
+/**
+ * Helper para renderizar carrossel Swiper por post type.
+ */
+function igesdf_intranet_swiper_carousel_render($post_type, $atts = [])
+{
+    $atts = shortcode_atts([
+        'posts_per_page' => 8,
+        'show_title' => false, // padrão false, seguimento: somente imagem
+        'show_excerpt' => false,
+    ], $atts, 'igesdf_intranet_carousel');
+
+    $args = [
+        'post_type' => $post_type,
+        'posts_per_page' => intval($atts['posts_per_page']),
+        'post_status' => ['private', 'publish'],
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ];
+
+    $query = new WP_Query($args);
+    if (!$query->have_posts()) {
+        return '<p>' . esc_html__('Nenhum conteúdo encontrado.', 'igesdf-core') . '</p>';
+    }
+
+    $container_id = 'igesdf-swiper-' . uniqid();
+    $html = '<div id="' . esc_attr($container_id) . '" class="igesdf-swiper-container">';
+    $html .= '<div class="swiper"><div class="swiper-wrapper">';
+
+    while ($query->have_posts()) : $query->the_post();
+        $thumb = get_the_post_thumbnail(get_the_ID(), 'large', [
+            'class' => 'swiper-slide-img',
+            'style' => 'width:100%;height:auto;max-height:522px;object-fit:cover;display:block;'
+        ]);
+        if (!$thumb) {
+            $thumb = get_the_post_thumbnail(get_the_ID(), 'full', [
+                'class' => 'swiper-slide-img',
+                'style' => 'width:100%;height:auto;max-height:522px;object-fit:cover;display:block;'
+            ]);
+        }
+        $thumb = $thumb ? $thumb : '<div class="swiper-fallback">' . esc_html__('Sem imagem', 'igesdf-core') . '</div>';
+        $link = esc_url(get_permalink(get_the_ID()));
+
+        $html .= '<div class="swiper-slide">';
+        $html .= '<a href="' . $link . '">';
+        $html .= '<div class="swiper-slide-thumb">' . $thumb . '</div>';
+        $html .= '</a>';
+        $html .= '</div>';
+    endwhile;
+
+    wp_reset_postdata();
+
+    $html .= '</div>'; // swiper-wrapper
+    $html .= '<div class="swiper-button-prev"></div>';
+    $html .= '<div class="swiper-button-next"></div>';
+    $html .= '<div class="swiper-pagination"></div>';
+    $html .= '</div>'; // swiper
+    $html .= '</div>'; // container
+
+    $html .= '<script>document.addEventListener("DOMContentLoaded", function () {
+        if (typeof Swiper !== "undefined") {
+            new Swiper("#' . esc_js($container_id) . ' .swiper", {
+                slidesPerView: 1,
+                spaceBetween: 16,
+                loop: true,
+                navigation: {
+                    nextEl: "#' . esc_js($container_id) . ' .swiper-button-next",
+                    prevEl: "#' . esc_js($container_id) . ' .swiper-button-prev",
+                },
+                pagination: {
+                    el: "#' . esc_js($container_id) . ' .swiper-pagination",
+                    clickable: true,
+                },
+                breakpoints: {
+                    768: { slidesPerView: 2 },
+                    1024: { slidesPerView: 3 }
+                }
+            });
+        }
+    });</script>';
+
+    return $html;
+}
+
+function igesdf_intranet_comunicado_carousel_shortcode($atts)
+{
+    return igesdf_intranet_swiper_carousel_render('comunicado', $atts);
+}
+add_shortcode('igesdf_intranet_comunicado_carousel', 'igesdf_intranet_comunicado_carousel_shortcode');
+
+function igesdf_intranet_divulgacao_carousel_shortcode($atts)
+{
+    return igesdf_intranet_swiper_carousel_render('divulgacao', $atts);
+}
+add_shortcode('igesdf_intranet_divulgacao_carousel', 'igesdf_intranet_divulgacao_carousel_shortcode');
+
+function igesdf_intranet_capacitacao_carousel_shortcode($atts)
+{
+    return igesdf_intranet_swiper_carousel_render('capacitacao', $atts);
+}
+add_shortcode('igesdf_intranet_capacitacao_carousel', 'igesdf_intranet_capacitacao_carousel_shortcode');
 
 function single_audio_function($post_id)
 {

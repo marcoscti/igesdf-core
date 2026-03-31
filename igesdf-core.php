@@ -418,8 +418,84 @@ function create_posttypes()
         'taxonomies'  => ['category']
     ]);
     add_post_type_support('producao', 'thumbnail');
+
+    // Intranet post types (privados por padrão)
+    $intranet_types = [
+        'comunicado' => [
+            'name' => __('Comunicados'),
+            'singular_name' => __('Comunicado'),
+            'all_items' => __('Todos os Comunicados'),
+            'menu_icon' => 'dashicons-megaphone',
+        ],
+        'divulgacao' => [
+            'name' => __('Divulgações'),
+            'singular_name' => __('Divulgação'),
+            'all_items' => __('Todas as Divulgações'),
+            'menu_icon' => 'dashicons-admin-site-alt3',
+        ],
+        'capacitacao' => [
+            'name' => __('Capacitações'),
+            'singular_name' => __('Capacitação'),
+            'all_items' => __('Todas as Capacitações'),
+            'menu_icon' => 'dashicons-welcome-learn-more',
+        ],
+    ];
+
+    foreach ($intranet_types as $type => $labels) {
+        register_post_type($type, [
+            'labels' => [
+                'name' => $labels['name'],
+                'singular_name' => $labels['singular_name'],
+                'all_items' => $labels['all_items'],
+            ],
+            'public' => false,
+            'show_ui' => true,
+            'show_in_menu' => 'igesdf_intranet',
+            'has_archive' => false,
+            'rewrite' => false,
+            'query_var' => false,
+            'publicly_queryable' => true,
+            'exclude_from_search' => true,
+            'supports' => ['title', 'editor', 'thumbnail'],
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+            'menu_icon' => $labels['menu_icon'],
+        ]);
+    }
 }
 add_action('init', 'create_posttypes');
+
+function igesdf_intranet_menu_page()
+{
+    add_menu_page(
+        __('Intranet'),
+        __('Intranet'),
+        'edit_posts',
+        'igesdf_intranet',
+        '',
+        'dashicons-admin-site',
+        5
+    );
+}
+add_action('admin_menu', 'igesdf_intranet_menu_page');
+
+/**
+ * Força status private para post types de intranet quando estão auto-draft.
+ */
+function igesdf_force_intranet_private_status($data, $postarr)
+{
+    $intranet_types = ['comunicado', 'divulgacao', 'capacitacao'];
+
+    if (isset($postarr['post_type'], $postarr['post_status'])
+        && in_array($postarr['post_type'], $intranet_types, true)
+        && $postarr['post_status'] === 'auto-draft'
+    ) {
+        $data['post_status'] = 'private';
+    }
+
+    return $data;
+}
+add_filter('wp_insert_post_data', 'igesdf_force_intranet_private_status', 10, 2);
 
 add_filter('tablepress_wp_search_integration', '__return_false');
 
